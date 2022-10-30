@@ -10,4 +10,9 @@ class OgrenciController extends Controller
     {
         return view("ogrenci");
     }
+
+    public function oneriAl()
+    {
+        
+    }
 }
