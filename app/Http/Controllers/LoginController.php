@@ -26,10 +26,10 @@ class LoginController extends Controller
 
         if (!$kullanici)
         {
-            dd("Hep sıkıntı");
-            return back()->with([
-                "error" => "Kullanıcı bulunamadı"
-            ]);
+            return response()->json([
+                "durum" => false,
+                "mesaj" => "Kullanıcı bulunamadı maalesef :(",
+            ], 500);
         }
         
         

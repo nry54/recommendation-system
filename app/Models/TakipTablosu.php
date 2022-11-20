@@ -10,7 +10,7 @@ use Illuminate\Notifications\Notifiable;
 class TakipTablosu extends Authenticatable
 {
     use HasFactory, Notifiable;
-
+    protected $table = 'takip_tablosu';
     /**
      * The attributes that are mass assignable.
      *

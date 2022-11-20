@@ -95,7 +95,7 @@
                             </div>
                         </div>
                     </div>
-                    <div class="row doruk-content pt-3">
+                    <div class="row pt-3">
                         @yield('content')
                     </div>
                 </div>
@@ -170,10 +170,33 @@
                     return moment;
                 }
             },
-            methods: 
-                yukleniyorDurum(durum) {
+            methods: {
+                yukleniyorDurum(durum){
                     this.yukleniyor = durum;
                 },
+                uyariAc(obje) {
+                    if (obje.toast !== undefined) {
+                        const Toast = Swal.mixin({
+                            toast: true,
+                            position: obje.toast.position ? obje.toast.position : 'top-end',
+                            showConfirmButton: false,
+                            timer: 3000,
+                            timerProgressBar: true,
+                        });
+
+                        return Toast.fire({
+                            icon: obje.toast.status ? 'success' : 'error',
+                            title: obje.toast.message ? obje.toast.message : 'İşlem başarılı!'
+                        });
+                    }
+
+                    Swal.fire({
+                        title: obje.baslik,
+                        text: obje.mesaj,
+                        icon: obje.tur,
+                        ...obje.ozellikler
+                    });
+                }, 
             },
         });
     </script>

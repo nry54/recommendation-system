@@ -26,5 +26,6 @@ Route::group(['middleware' => ['auth']], function () {
 
 Route::get("/login", [LoginController::class, "index"])->name("login");
 Route::post("/login", [LoginController::class, "login"])->name("login-post");
+Route::post('/oneriAl', [OgrenciController::class, 'oneriAl'])->name("oneriAl");
 
 Route::get('/cikis', [LoginController::class, 'destroy'])->name('logout');

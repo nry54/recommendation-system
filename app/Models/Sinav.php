@@ -10,7 +10,7 @@ use Illuminate\Notifications\Notifiable;
 class Sinav extends Authenticatable
 {
     use HasFactory, Notifiable;
-
+    protected $table = 'sinav';
     /**
      * The attributes that are mass assignable.
      *

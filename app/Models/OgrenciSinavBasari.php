@@ -10,7 +10,7 @@ use Illuminate\Notifications\Notifiable;
 class OgrenciSinavBasari extends Authenticatable
 {
     use HasFactory, Notifiable;
-
+    protected $table = 'ogrenci_sinav_basari';
     /**
      * The attributes that are mass assignable.
      *
