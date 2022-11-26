@@ -14,7 +14,9 @@ class OgrenciController extends Controller
 {
     public function index()
     {
-        return view("ogrenci");
+        return view('ogrenci', [
+            "ruleSets" => array_values($this->ruleSets),
+        ]);
     }
 
     public function oneriAl()
@@ -62,27 +64,48 @@ class OgrenciController extends Controller
                 ->get();
                 
                 $ogrenci_veri = $kullaniciTakipleri[0];
-                $ogrenci_basari_puani = $ogrenci_veri["basari_puani"];
+                $basari_puani = $ogrenci_veri["basari_puani"];
             /*##################################################################*/
         
 
             /** Türlere göre ögrencinin takip oranlarının hesapları @return $takip_oranlari */
-                $video_oran = $ogrenci_veri["video_takip"]/$toplamTakip["video_toplam"];
-                $ses_oran = $ogrenci_veri["ses_takip"]/$toplamTakip["ses_toplam"];
-                $metin_oran = $ogrenci_veri["metin_takip"]/$toplamTakip["metin_toplam"];
-                $swf_oran = $ogrenci_veri["swf_takip"]/$toplamTakip["swf_toplam"];
+                $video_oran = round($ogrenci_veri["video_takip"]/$toplamTakip["video_toplam"],3);
+                $ses_oran = round($ogrenci_veri["ses_takip"]/$toplamTakip["ses_toplam"],3);
+                $metin_oran = round($ogrenci_veri["metin_takip"]/$toplamTakip["metin_toplam"],3);
+                $swf_oran = round($ogrenci_veri["swf_takip"]/$toplamTakip["swf_toplam"],3);
+            /*##################################################################*/
+
+            /** Kural setlerimizi döngüye alıp yönlenmeler yapılmaktadır */
+                $ortalamaninUstundeMi=false;
+                foreach($this->ruleSets as $key => $value){
+                    $mode=$value["mode"];
+                    
+                    if($mode >= $basari_puani){
+                        /** Yönlenme bu yönde devam edecektir */
+                    } else {
+                        /** Ögrencinin basarılı olduguna dair mesaj verilir */
+                        $ortalamaninUstundeMi=true;
+                    }
+                }
             /*##################################################################*/
 
             /** Return edilecek veriler bir dizide tutmaktayız */
                 $sonucOneriler = array(
-                    "basari_puani" => $ogrenci_basari_puani,
-                    "ogrenci_veri" => $ogrenci_veri
+                    "ogrenci_veri" => $ogrenci_veri,
+                    "takip_oranlar" => array(
+                        "video_oran" => $video_oran,
+                        "ses_oran" => $ses_oran,
+                        "metin_oran" => $metin_oran,
+                        "swf_oran" => $swf_oran
+                    )
                 );
             /*##################################################################*/
             return response()->json([
                 "durum" => true,
                 "mesaj" => "Detaylar başarıyla getirildi.",
                 "sonucOneriler" => $sonucOneriler,
+                "ortalamaninUstundeMi" => $ortalamaninUstundeMi,
+                "kuralSetleri" => $this->ruleSets
             ], 200);
         } catch (\Exception $ex) {
             return response()->json([

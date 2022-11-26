@@ -44,6 +44,9 @@
                         <h6 class="font-weight-black"> ÖNERİLER</h6>
                     </div>
                     <v-divider></v-divider>
+                    <div v-if="ortalamaninUstundeMi">
+                        Puanınız ortalamanın üstünde.. Çok iyi gidiyorsun, aynen bu şekilde çalışmaya devam et. Başarılarının devamını dilerim..
+                    </div>
                 </div>
             </div>
         </div>
@@ -61,6 +64,7 @@
                     basari_puani:null,
                     sinav_adi:null,
                     sinav_kodu:null,
+                    ortalamaninUstundeMi:false,
                 };
             },
             methods: {
@@ -76,14 +80,20 @@
                         }
                         else {
                             let sonuc = response.data;
-                            if(sonuc && sonuc.sonucOneriler){
-                                let sonuc_oneri = sonuc.sonucOneriler;
-                                vm.basari_puani = sonuc_oneri["basari_puani"];
+                            if(sonuc){
+                                if(sonuc.sonucOneriler){ 
+                                    let sonuc_oneri = sonuc.sonucOneriler;
+                                    
+                                    if(sonuc_oneri["ogrenci_veri"]) {
+                                        let sinav_veri = sonuc_oneri["ogrenci_veri"];
+                                        vm.sinav_adi = sinav_veri["ad"];
+                                        vm.sinav_kodu = sinav_veri["kod"];
+                                        vm.basari_puani = sinav_veri["basari_puani"];
+                                    }
+                                }
 
-                                if(sonuc_oneri["ogrenci_veri"]) {
-                                    let sinav_veri = sonuc_oneri["ogrenci_veri"];
-                                    vm.sinav_adi = sinav_veri["ad"];
-                                    vm.sinav_kodu = sinav_veri["kod"];
+                                if(sonuc.ortalamaninUstundeMi){
+                                    vm.ortalamaninUstundeMi = sonuc.ortalamaninUstundeMi;
                                 }
                             }
                         }
