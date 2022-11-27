@@ -89,6 +89,14 @@ class OgrenciController extends Controller
                 }
             /*##################################################################*/
 
+            /** Sınava giren ogrenci sayısı ve ortalama puanın bulunması */
+                $toplamOrtalama = OgrenciSinavBasari::select(DB::raw("
+                    COUNT($puan_tablosu.kid) as ogrenci_sayisi,AVG($puan_tablosu.basari_puani) as ortalama_puan
+                "))
+                ->get();
+                
+                $toplam_ortalama_degerler = $toplamOrtalama[0];
+            /**######################################################## */
             /** Return edilecek veriler bir dizide tutmaktayız */
                 $sonucOneriler = array(
                     "ogrenci_veri" => $ogrenci_veri,
@@ -97,14 +105,17 @@ class OgrenciController extends Controller
                         "ses_oran" => $ses_oran,
                         "metin_oran" => $metin_oran,
                         "swf_oran" => $swf_oran
-                    )
+                    ),
+                    "ogrenci_sayisi" => $toplam_ortalama_degerler["ogrenci_sayisi"],
+                    "ortalama_puan"  => $toplam_ortalama_degerler["ortalama_puan"],
+                    "ortalamaninUstundeMi" => $ortalamaninUstundeMi
                 );
             /*##################################################################*/
+
             return response()->json([
                 "durum" => true,
                 "mesaj" => "Detaylar başarıyla getirildi.",
                 "sonucOneriler" => $sonucOneriler,
-                "ortalamaninUstundeMi" => $ortalamaninUstundeMi,
                 "kuralSetleri" => $this->ruleSets
             ], 200);
         } catch (\Exception $ex) {
