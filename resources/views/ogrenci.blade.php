@@ -64,6 +64,9 @@
                     <div v-if="ortalamaninUstundeMi">
                         Puanınız ortalamanın üstünde.. Çok iyi gidiyorsun, aynen bu şekilde çalışmaya devam et. Başarılarının devamını dilerim..
                     </div>
+                    <div v-else-if="oneriler">
+                        @{{ oneriler }} 
+                    </div>
                 </div>
             </div>
         </div>
@@ -84,6 +87,7 @@
                     toplamOgrenci: 0,
                     ortalama_puan: null,
                     ortalamaninUstundeMi:false,
+                    oneriler:'',
                 };
             },
             methods: {
@@ -100,6 +104,10 @@
                         else {
                             let sonuc = response.data;
                             if(sonuc){
+                                if(sonuc["oneriler"]){
+                                    vm.oneriler = sonuc["oneriler"];
+                                }
+
                                 if(sonuc.sonucOneriler){ 
                                     let sonuc_oneri = sonuc.sonucOneriler;
                                     

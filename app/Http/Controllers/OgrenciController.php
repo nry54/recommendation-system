@@ -66,15 +66,6 @@ class OgrenciController extends Controller
                 );
  
                 $dizi = $this->c5_algoritmasini_uygula($params);
-               
-                /*
-                if(isset($kosulDizi)) {
-
-                } else {
-                    
-                    $ortalamaninUstundeMi=true;
-                }
-                */
             /*##################################################################*/
 
             /** Sınava giren ogrenci sayısı ve ortalama puanın bulunması */
@@ -85,6 +76,51 @@ class OgrenciController extends Controller
                 
                 $toplam_ortalama_degerler = $toplamOrtalama[0];
             /**######################################################## */
+            
+            $oneri = "";
+            if(isset($dizi) && count($dizi)){
+                $oneri.="Sınavlarınıza çalışırken ";
+                $tavsiyeSayi=0;
+                foreach($dizi as $key => $value){
+                    if($value=="video_takip"){
+                        if($tavsiyeSayi>0){
+                            $oneri.=",";
+                        }
+
+                        $oneri.="video içeriklerinden";
+                        $tavsiyeSayi++;
+                    }
+
+                    if($value=="ses_takip") {
+                        if($tavsiyeSayi>0){
+                            $oneri.=",";
+                        }
+                        $oneri.="ses dosyalarından";
+                        $tavsiyeSayi++;
+                    }
+
+                    if($value=="metin_takip") {
+                        if($tavsiyeSayi>0){
+                            $oneri.=",";
+                        }
+                        $oneri.="metin dosyalarından";
+                        $tavsiyeSayi++;
+                    }
+
+                    if($value=="swf_takip") {
+                        if($tavsiyeSayi>0){
+                            $oneri.=",";
+                        }
+                        $oneri.="swf dosyalarından faydalanarak, internet ortamındaki basit uygulamalar ve animasyonların uygulamasını yaparak";
+                        $tavsiyeSayi++;
+                    }
+                }
+
+                $oneri.=" sınavlarınıza hazırlanırsanız başarınız artacaktır. İyi çalışmalar dileriz..";
+            } else {
+                $ortalamaninUstundeMi=true;
+            }
+
             /** Return edilecek veriler bir dizide tutmaktayız */
                 $sonucOneriler = array(
                     "ogrenci_veri" => $ogrenci_veri,
@@ -101,7 +137,7 @@ class OgrenciController extends Controller
                 "mesaj" => "Detaylar başarıyla getirildi.",
                 "sonucOneriler" => $sonucOneriler,
                 "kuralSetleri" => $this->ruleSets,
-                "dizi"  => $dizi
+                "oneriler"  => $oneri
             ], 200);
         } catch (\Exception $ex) {
             return response()->json([
@@ -132,11 +168,14 @@ class OgrenciController extends Controller
                 $v_ses_takip = (isset($value["ses_takip"]) && $value["ses_takip"]) ? $value["ses_takip"] : null;
                 $v_metin_takip = (isset($value["metin_takip"]) && $value["metin_takip"]) ? $value["metin_takip"] : null;
                 $v_swf_takip = (isset($value["swf_takip"]) && $value["swf_takip"]) ? $value["swf_takip"] : null;
+                
+                $operator = $value["operator"];
 
                 if($mode >= $basari_puani){
                     /** Yönlenme bu yönde devam edecektir */
-                    if($v_video_takip) {
-                        if($video_takip.$v_video_takip){
+                    if(isset($v_video_takip)) {
+                        $condition_video = eval("return ". $video_takip.$operator.$v_video_takip.";");
+                        if($condition_video){
                             /** Ögrencinin takip oranı kosulu saglıyorsa o dal üzerinden diger dala gecilir */
                             $params["kural_seti"] = $v_node; 
                             $this->c5_algoritmasini_uygula($params);
@@ -149,23 +188,24 @@ class OgrenciController extends Controller
                         }
                     }
                     
-                    if($v_ses_takip) {
-                        if($ses_takip.$v_ses_takip){
-                            
+                    if(isset($v_ses_takip)) {
+                        $condition_ses = eval("return ". $ses_takip.$operator.$v_ses_takip.";");
+                        if($condition_ses){
                             /** Ögrencinin takip oranı kosulu saglıyorsa o dal üzerinden diger dala gecilir */
-                            $params["kural_seti"] = $value["node"];
+                            $params["kural_seti"] = $value["node"]; 
                             $this->c5_algoritmasini_uygula($params);
                         } else {
                             /** Ögrenci takip oranı kosulunu saglamıyorsa ve modu yüksek olan dalda olduğumuzdan 
                              * tavsiye verebilmek icin kosulu dizimize attık
                              */
+                           
                             array_push($this->kosulDizi,"ses_takip");
                         }
                     }
 
-                    if($v_metin_takip) {
-                        
-                        if($metin_takip.$v_metin_takip){
+                    if(isset($v_metin_takip)) {
+                        $condition_metin = eval("return ". $metin_takip.$operator.$v_metin_takip.";");
+                        if($condition_metin){
                             /** Ögrencinin takip oranı kosulu saglıyorsa o dal üzerinden diger dala gecilir */
                             $params["kural_seti"] = $value["node"];
                             $this->c5_algoritmasini_uygula($params);
@@ -177,17 +217,21 @@ class OgrenciController extends Controller
                         }
                     }
 
-                    if($v_swf_takip) {
-                        if($swf_takip.$v_swf_takip){
+                    
+                    if(isset($v_swf_takip)) {
+                        
+                        //array_push($this->kosulDizi,$key.($swf_takip.$operator.$v_swf_takip));
+                        $condition_swf = eval("return ". $swf_takip.$operator.$v_swf_takip.";");
+                        if($condition_swf){
                             /** Ögrencinin takip oranı kosulu saglıyorsa o dal üzerinden diger dala gecilir */ 
                             $params["kural_seti"] = $value["node"];  
-                            
+                         
                             $this->c5_algoritmasini_uygula($params);
                         } else {
-                            return 2;
                             /** Ögrenci takip oranı kosulunu saglamıyorsa ve modu yüksek olan dalda olduğumuzdan 
                              * tavsiye verebilmek icin kosulu dizimize attık
                              */
+                           
                             array_push($this->kosulDizi,"swf_takip");
                         }
                     } 
