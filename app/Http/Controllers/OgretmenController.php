@@ -19,6 +19,8 @@ class OgretmenController extends Controller
     {
         try
         {
+            $ogrenciListesi = $this->ogrenciBilgileriniGetir();
+            /*
             $kullanicilar = (new Kullanicilar())->getTable();
             $sinavBasari = (new OgrenciSinavBasari())->getTable();
             
@@ -29,7 +31,7 @@ class OgretmenController extends Controller
             "))
             ->join($sinavBasari, $sinavBasari . '.kid', '=', $kullanicilar . '.kullanici_id')
             ->get();
-
+            */
             return response()->json([
                 "durum" => true,
                 "mesaj" => "Öğrenci listesi başarıyla getirildi.",

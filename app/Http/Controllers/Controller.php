@@ -16,6 +16,8 @@ class Controller extends BaseController
 {
     use AuthorizesRequests, DispatchesJobs, ValidatesRequests;
 
+    protected $kosulDizi = array();
+
     protected $ruleSets = [
         "282.5" => array(
             'swf_takip'=>'0.500',
@@ -419,5 +421,198 @@ class Controller extends BaseController
             'ogrenci_veri' => $ogrenci_veri,
             'basari_puani' => $basari_puani
         ];
+    }
+
+    public function ogrenciBilgileriniGetir()
+    {
+        try
+        {
+            $kullanicilar = (new Kullanicilar())->getTable();
+            $sinavBasari = (new OgrenciSinavBasari())->getTable();
+            $takip_tablosu = (new TakipTablosu())->getTable();
+            
+            $ogrenciListesi = Kullanicilar::select(DB::raw("
+                $kullanicilar.kullanici_id,
+                $kullanicilar.ad,
+                $kullanicilar.soyad,
+                $sinavBasari.basari_puani,
+                $takip_tablosu.video_takip,
+                $takip_tablosu.ses_takip,
+                $takip_tablosu.metin_takip,
+                $takip_tablosu.swf_takip
+            "))
+            ->join($sinavBasari, $sinavBasari . '.kid', '=', $kullanicilar . '.kullanici_id')
+            ->join($takip_tablosu, $takip_tablosu . '.kid', '=', $kullanicilar . '.kullanici_id')
+            ->get();
+
+            /** Toplam takip sayılarını getiren kod blokları @return $toplam_takip_verileri */
+                $toplamTakipler = TakipTablosu::select(DB::raw("
+                    SUM($takip_tablosu.video_takip) as video_toplam,
+                    SUM($takip_tablosu.ses_takip) as ses_toplam,
+                    SUM($takip_tablosu.metin_takip) as metin_toplam,
+                    SUM($takip_tablosu.swf_takip) as swf_toplam
+                "))
+                ->get();
+                $toplamTakip = $toplamTakipler[0];
+            /*##################################################################*/
+
+            foreach($ogrenciListesi as $key => $ogrenci){
+                /** Türlere göre ögrencinin takip oranlarının hesapları @return $takip_oranlari */           
+                    $ogrenci_video_takip = $ogrenci["video_takip"];
+                    $ogrenci_ses_takip = $ogrenci["ses_takip"];
+                    $ogrenci_metin_takip = $ogrenci["metin_takip"];
+                    $ogrenci_swf_takip = $ogrenci["swf_takip"];
+    
+                    $video_oran = round($ogrenci_video_takip/$toplamTakip["video_toplam"],3);
+                    $ses_oran = round($ogrenci_ses_takip/$toplamTakip["ses_toplam"],3);
+                    $metin_oran = round($ogrenci_metin_takip/$toplamTakip["metin_toplam"],3);
+                    $swf_oran = round($ogrenci_swf_takip/$toplamTakip["swf_toplam"],3);
+                /*##################################################################*/
+
+                $ogrenci_takip_oranlari = array(
+                    "video_takip" => $video_oran,
+                    "ses_takip"   => $ses_oran,
+                    "metin_takip" => $metin_oran,
+                    "swf_takip"   => $swf_oran
+                );
+
+                $params = array(
+                    "kural_seti" => $this->ruleSets,
+                    "basari_puani" => $ogrenci["basari_puani"],
+                    "ogrenci_takip_oranlari" => $ogrenci_takip_oranlari
+                );
+ 
+                if(!isset($dizi[$ogrenci["kullanici_id"]]))
+                {
+                    $dizi[$ogrenci["kullanici_id"]] = array();
+                }
+                
+                $dizi[$ogrenci["kullanici_id"]] = $this->c5_algoritmasini_uygula($params);
+            }
+
+            return [
+                "dizi" => $dizi,
+                "ogrenciListesi" => $ogrenciListesi
+            ];
+        }
+        catch (\Exception $ex) {
+                return response()->json([
+                    "durum" => false,
+                    "mesaj" => "Öğrenci listesi getirilemedi..",
+                    "hata" => $ex->getMessage(),
+                    "satir" => $ex->getLine(),
+                ], 500);
+            }
+    }
+
+    public function c5_algoritmasini_uygula($params)
+    {
+        try 
+        {
+            $basari_puani = $params["basari_puani"];
+            $takip_veri = $params["ogrenci_takip_oranlari"];
+
+            $video_takip = $takip_veri["video_takip"];
+            $ses_takip = $takip_veri["ses_takip"];
+            $metin_takip = $takip_veri["metin_takip"];
+            $swf_takip = $takip_veri["swf_takip"];
+
+            foreach($params["kural_seti"] as $key => $value){
+                $mode=$key;
+                $v_node = $value["node"];
+                $v_video_takip = (isset($value["video_takip"]) && $value["video_takip"]) ? $value["video_takip"] : null;
+                $v_ses_takip = (isset($value["ses_takip"]) && $value["ses_takip"]) ? $value["ses_takip"] : null;
+                $v_metin_takip = (isset($value["metin_takip"]) && $value["metin_takip"]) ? $value["metin_takip"] : null;
+                $v_swf_takip = (isset($value["swf_takip"]) && $value["swf_takip"]) ? $value["swf_takip"] : null;
+                
+                $operator = $value["operator"];
+
+                if($mode >= $basari_puani){
+                    /** Yönlenme bu yönde devam edecektir */
+                    if(isset($v_video_takip)) {
+                        $condition_video = eval("return ". $video_takip.$operator.$v_video_takip.";");
+                        if($condition_video){
+                            /** Ögrencinin takip oranı kosulu saglıyorsa o dal üzerinden diger dala gecilir */
+                            $params["kural_seti"] = $v_node; 
+                            $this->c5_algoritmasini_uygula($params);
+                        } else {
+                            /** Ögrenci takip oranı kosulunu saglamıyorsa ve modu yüksek olan dalda olduğumuzdan 
+                             * tavsiye verebilmek icin kosulu dizimize attık
+                             */
+                            if (!in_array("Görsel", $this->kosulDizi))
+                            {
+                                array_push($this->kosulDizi,"Görsel");
+                            }
+                        }
+                    }
+                    
+                    if(isset($v_ses_takip)) {
+                        $condition_ses = eval("return ". $ses_takip.$operator.$v_ses_takip.";");
+                        if($condition_ses){
+                            /** Ögrencinin takip oranı kosulu saglıyorsa o dal üzerinden diger dala gecilir */
+                            $params["kural_seti"] = $value["node"]; 
+                            $this->c5_algoritmasini_uygula($params);
+                        } else {
+                            /** Ögrenci takip oranı kosulunu saglamıyorsa ve modu yüksek olan dalda olduğumuzdan 
+                             * tavsiye verebilmek icin kosulu dizimize attık
+                             */
+                            if (!in_array("İşitsel", $this->kosulDizi))
+                            {
+                                array_push($this->kosulDizi,"İşitsel");
+                            }
+                        }
+                    }
+
+                    if(isset($v_metin_takip)) {
+                        $condition_metin = eval("return ". $metin_takip.$operator.$v_metin_takip.";");
+                        if($condition_metin){
+                            /** Ögrencinin takip oranı kosulu saglıyorsa o dal üzerinden diger dala gecilir */
+                            $params["kural_seti"] = $value["node"];
+                            $this->c5_algoritmasini_uygula($params);
+                        } else {
+                            /** Ögrenci takip oranı kosulunu saglamıyorsa ve modu yüksek olan dalda olduğumuzdan 
+                             * tavsiye verebilmek icin kosulu dizimize attık
+                             */
+                            if (!in_array("Okuma/Yazma", $this->kosulDizi))
+                            {
+                                array_push($this->kosulDizi,"Okuma/Yazma");
+                            }
+                        }
+                    }
+
+                    
+                    if(isset($v_swf_takip)) {
+                        
+                        //array_push($this->kosulDizi,$key.($swf_takip.$operator.$v_swf_takip));
+                        $condition_swf = eval("return ". $swf_takip.$operator.$v_swf_takip.";");
+                        if($condition_swf){
+                            /** Ögrencinin takip oranı kosulu saglıyorsa o dal üzerinden diger dala gecilir */ 
+                            $params["kural_seti"] = $value["node"];  
+                         
+                            $this->c5_algoritmasini_uygula($params);
+                        } else {
+                            /** Ögrenci takip oranı kosulunu saglamıyorsa ve modu yüksek olan dalda olduğumuzdan 
+                             * tavsiye verebilmek icin kosulu dizimize attık
+                             */
+                           
+                             if (!in_array("Kinestetik", $this->kosulDizi))
+                             {
+                                array_push($this->kosulDizi,"Kinestetik");
+                             }
+                        }
+                    } 
+                } 
+            }
+
+            return implode(',',$this->kosulDizi);
+        }
+        catch (\Exception $ex) {
+            return response()->json([
+                "durum" => false,
+                "mesaj" => "C5 algoritması uygulanırken hata oluştu",
+                "hata" => $ex->getMessage(),
+                "satir" => $ex->getLine(),
+            ], 500);
+        }
     }
 }

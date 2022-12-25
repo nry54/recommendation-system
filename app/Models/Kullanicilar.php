@@ -19,7 +19,7 @@ class Kullanicilar extends Authenticatable
      * @var array
      */
     protected $fillable = [
-        'kullanici_turu','ad', 'soyad','username', 'password',
+        'kullanici_turu', 'kullanici_id','ad', 'soyad','username', 'password',
     ];
 
     /**
@@ -28,7 +28,6 @@ class Kullanicilar extends Authenticatable
      * @var array
      */
     protected $hidden = [
-        'kullanici_id',
         "password"
     ];
 }

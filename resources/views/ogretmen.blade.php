@@ -8,23 +8,33 @@
                         <h5 class="font-weight-black"> ÖĞRENCİLERİM </h5> 
                      </div>
                      <v-divider></v-divider>
-                     <v-layout row wrap>
-                        <v-flex xs12>
-                            <v-data-table
-                                :headers="headers"
-                                :items="ogrenciListesi"
-                                class="elevation-1"
-                            >
-                                <template v-slot:items="props">
-                                    <td> | props.item.ad |</td>
-                                    <td class="text-xs-right">| props.item.basari_puani |</td>
-                                    <td class="justify-center layout px-0">
-                                    
+                     <v-container fluid grid-list-md>
+                        <table class="table table-striped table-hover">
+                            <thead>
+                                <tr>
+                                    <th>Öğrenci Ad Soyad</th>
+                                    <th>Başarı Puanı</th>
+                                    <th class="text-center">Öğrenme Stili</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr v-for="(ogrenci, index) in ogrenciListesi" :key="index">
+                                    <td>
+                                        <div class="col-12">
+                                            @{{ ogrenci.ad }}  @{{ ogrenci.soyad }}
+                                        </div>
                                     </td>
-                                </template>
-                            </v-data-table>
-                        </v-flex>
-                     </v-layout>
+                                    <td class="text-center">
+                                        @{{ ogrenci.basari_puani }}
+                                    </td>
+                                    <td class="text-center">
+                                        @{{ ogrenme_stilleri[ogrenci.kullanici_id] }}
+                                    </td>
+                                </tr>
+                            </tbody>
+                            <tfoot>
+                        </table>
+                    </v-container>  
                 </div>
             </div>
         </div>
@@ -44,10 +54,7 @@
                         baslik: "Öğretmen Paneli",
                     },
                     ogrenciListesi: [],
-                    headers: [
-                        { text: 'Öğrenci Adı', value: 'ad',sortable: false },
-                        { text: 'Başarı Puanı', value: 'basari_puani' },
-                    ],
+                    ogrenme_stilleri: [],
                 };
             },
             methods: {
@@ -64,7 +71,8 @@
                         
                         let sonuc = response.data;
                         if(sonuc){
-                            vm.ogrenciListesi = sonuc["ogrenciListesi"];
+                            vm.ogrenciListesi = sonuc["ogrenciListesi"]["ogrenciListesi"];
+                            vm.ogrenme_stilleri = sonuc["ogrenciListesi"]["dizi"];
                         }
                     });
                 }
