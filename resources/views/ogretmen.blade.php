@@ -2,6 +2,29 @@
 @section('content')
     <div class="row">
         <div class="col-12">
+            <div class="card" key="ONERILER">
+                <div class="card-body">
+                    <div class="text-overline">
+                        <h5 class="font-weight-black"> ÖNERİLER </h5> 
+                     </div>
+                     <v-divider></v-divider>
+                     <v-container fluid grid-list-md>
+                        Öğrencilerinize doküman verirken öğrenme stilllerini dikkate almanız öğrencilerinizin sınav başarısını artırma konusunda avantaj sağlayacaktır.
+                        <br/>
+                        <b>Görsel öğrenme </b> stiline sahip öğrencileriniz için video dosyaları ve power point dosyalarından faydalanabilirsiniz.
+                        <br/>
+                        <b>İşitsel öğrenme </b> stiline sahip öğrencileriniz için ses dosyaları kullanmanızda fayda var.
+                        <br/>
+                        <b>Okuma/Yazma öğrenme </b> stiline sahip öğrencileriniz için metin dosyaları tercih etmelisiniz.
+                        <br/>
+                        Son olarak ise <b>kinestetik öğrenme </b> stiline sahip öğrencileriniz swf dosyaları, etkileşimli uygulamalar
+                        ile çalıştığında sınavlarında başarılı olacaktır..
+                     </v-container>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-12">
             <div class="card" key="OGRENCILERIM">
                 <div class="card-body">
                     <div class="text-overline">
