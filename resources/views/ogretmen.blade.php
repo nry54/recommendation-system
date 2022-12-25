@@ -12,14 +12,14 @@
                         <table class="table table-striped table-hover">
                             <thead>
                                 <tr>
-                                    <th>Öğrenci Ad Soyad</th>
-                                    <th>Başarı Puanı</th>
-                                    <th class="text-center">Öğrenme Stili</th>
+                                    <th class="text-center"><b> Öğrenci Ad Soyad </b></th>
+                                    <th class="text-center"><b>Başarı Puanı</b></th>
+                                    <th class="text-center"><b>Öğrenme Stili </b></th>
                                 </tr>
                             </thead>
                             <tbody>
                                 <tr v-for="(ogrenci, index) in ogrenciListesi" :key="index">
-                                    <td>
+                                    <td class="text-center">
                                         <div class="col-12">
                                             @{{ ogrenci.ad }}  @{{ ogrenci.soyad }}
                                         </div>
@@ -27,8 +27,14 @@
                                     <td class="text-center">
                                         @{{ ogrenci.basari_puani }}
                                     </td>
-                                    <td class="text-center">
+                                    <td class="text-center" v-if="ogrenme_stilleri[ogrenci.kullanici_id]">
                                         @{{ ogrenme_stilleri[ogrenci.kullanici_id] }}
+                                    </td>
+                                    <td class="text-center" v-else>
+                                        <span v-if="max_takip[ogrenci.kullanici_id]=='video_takip'"> Görsel </span>
+                                        <span v-if="max_takip[ogrenci.kullanici_id]=='ses_takip'"> İşitsel </span>
+                                        <span v-if="max_takip[ogrenci.kullanici_id]=='metin_takip'"> Okuma/Yazma </span>
+                                        <span v-if="max_takip[ogrenci.kullanici_id]=='swf_takip'"> Kinestetik </span>
                                     </td>
                                 </tr>
                             </tbody>
@@ -55,6 +61,7 @@
                     },
                     ogrenciListesi: [],
                     ogrenme_stilleri: [],
+                    max_takip: [],
                 };
             },
             methods: {
@@ -73,6 +80,7 @@
                         if(sonuc){
                             vm.ogrenciListesi = sonuc["ogrenciListesi"]["ogrenciListesi"];
                             vm.ogrenme_stilleri = sonuc["ogrenciListesi"]["dizi"];
+                            vm.max_takip = sonuc["ogrenciListesi"]["max_takip"];
                         }
                     });
                 }

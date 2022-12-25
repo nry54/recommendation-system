@@ -488,10 +488,18 @@ class Controller extends BaseController
                 }
                 
                 $dizi[$ogrenci["kullanici_id"]] = $this->c5_algoritmasini_uygula($params);
+
+                $takipler = array ("video_takip" => $ogrenci_video_takip, 
+                                    "ses_takip" => $ogrenci_ses_takip, 
+                                    "metin_takip" => $ogrenci_metin_takip,
+                                    "swf_takip" => $ogrenci_swf_takip);
+
+                $max_takip[$ogrenci["kullanici_id"]] = array_search(max($takipler),$takipler);
             }
 
             return [
                 "dizi" => $dizi,
+                "max_takip" => $max_takip,
                 "ogrenciListesi" => $ogrenciListesi
             ];
         }
